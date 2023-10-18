@@ -1,22 +1,20 @@
 import { kv } from '@vercel/kv'
 import { OpenAIStream, StreamingTextResponse } from 'ai'
-import { Configuration, OpenAIApi } from 'openai-edge'
+import OpenAI from 'openai'
 
 import { auth } from '@/auth'
 import { nanoid } from '@/lib/utils'
 
 export const runtime = 'edge'
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
-
-const openai = new OpenAIApi(configuration)
 
 export async function POST(req: Request) {
   const json = await req.json()
   const { messages, previewToken } = json
-  const userId = (await auth())?.user.id
+  const userId = { user: { id: 'test' } }.user.id
 
   if (!userId) {
     return new Response('Unauthorized', {
@@ -24,15 +22,30 @@ export async function POST(req: Request) {
     })
   }
 
-  if (previewToken) {
-    configuration.apiKey = previewToken
-  }
+  // if (previewToken) {
+  //   configuration.apiKey = previewToken
+  // }
 
-  const res = await openai.createChatCompletion({
+  const res = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages,
     temperature: 0.7,
-    stream: true
+    stream: true,
+    functions: [
+      {
+        name: 'weather_api',
+        description: 'You can get the weather of London from this api endpoint',
+        parameters: {
+          type: 'object',
+          properties: {
+            location: {
+              type: 'string'
+            }
+          },
+          required: ['location']
+        }
+      }
+    ]
   })
 
   const stream = OpenAIStream(res, {

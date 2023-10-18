@@ -20,6 +20,7 @@ import { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { toast } from 'react-hot-toast'
+import { ChatRequest } from 'ai'
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -46,6 +47,19 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         if (response.status === 401) {
           toast.error(response.statusText)
         }
+      },
+      experimental_onFunctionCall: async (chatMessages, functionCall) => {
+        return {
+          messages: [
+            ...chatMessages,
+            {
+              id: Math.random().toString(),
+              name: 'weather_api',
+              role: 'function' as const,
+              content: JSON.stringify('32 celsius')
+            }
+          ]
+        } as ChatRequest
       }
     })
   return (

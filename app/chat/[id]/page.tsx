@@ -17,7 +17,7 @@ export interface ChatPageProps {
 export async function generateMetadata({
   params
 }: ChatPageProps): Promise<Metadata> {
-  const session = await auth()
+  const session = { user: { id: 'test' } } //await auth()
 
   if (!session?.user) {
     return {}
@@ -30,7 +30,7 @@ export async function generateMetadata({
 }
 
 export default async function ChatPage({ params }: ChatPageProps) {
-  const session = await auth()
+  const session = { user: { id: 'test' } } //await auth()
 
   if (!session?.user) {
     redirect(`/sign-in?next=/chat/${params.id}`)
